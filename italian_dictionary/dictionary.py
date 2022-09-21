@@ -10,3 +10,12 @@ def get_definition(word, all_data=True, limit=None):
         if limit is not None and len(defs) > limit:
             del defs[limit:]
         return defs
+
+def get_en_definition(word, all_data=True, limit=None):
+    if all_data:
+        return scraper.get_en_data(word)
+    else:
+        defs = scraper.get_en_data(word, all_data=False)
+        if limit is not None and len(defs) > limit:
+            del defs[limit:]
+        return defs

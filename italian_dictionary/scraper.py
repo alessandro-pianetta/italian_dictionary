@@ -4,7 +4,8 @@ from urllib import parse
 
 from italian_dictionary import exceptions
 
-URL = "https://www.dizionario-inglese.com/dizionario-italiano-inglese.php?parola={}"
+URL = "https://www.dizionario-italiano.it/dizionario-italiano.php?parola={}100"
+EN_URL = "https://www.dizionario-inglese.com/dizionario-italiano-inglese.php?parola={}"
 
 
 def build_url(base_url):
@@ -55,7 +56,38 @@ def get_grammatica(soup):
     return [x.text for x in gram]
 
 
+def get_locuzioni(soup):
+    bad_loc = soup.find_all('span', class_='cit_ita_1')
+    loc = [x.text for x in bad_loc]
+    return loc
+
+
 def get_defs(soup):
+    defs = []
+    for definitions in soup.find_all('span', class_='italiano'):
+        children_content = ''
+        for children in definitions.findChildren():
+            if children.string is None:
+                continue
+            try:
+                if children.attrs['class'][0] in ('esempi', 'autore'):
+                    continue
+                else:
+                    children_content += children.text
+                    children_content += ' '
+                    children.decompose()
+            except KeyError:
+                continue
+        if children_content != '':
+            defs.append(f"{children_content.upper()} -- {definitions.text.replace('()', '')}")
+        else:
+            defs.append(definitions.text)
+    if len(defs) == 0:
+        raise exceptions.WordNotFoundError()
+    return defs
+
+
+def get_en_defs(soup):
     defs = []
     definitions = soup.find_all('span', class_='italiano')
     for definition in definitions:
@@ -73,6 +105,7 @@ def get_defs(soup):
         raise exceptions.WordNotFoundError()
     return defs
 
+
 def is_target_property(type, target):
     is_target = False
     if type == target:
@@ -87,7 +120,18 @@ def get_data(word, all_data=True):
         return get_defs(soup)
 
     data = {'definizione': get_defs(soup), 'sillabe': get_sillabe(soup, word), 'lemma': get_lemma(soup),
-            'pronuncia': get_pronuncia(soup), 'grammatica': get_grammatica(soup),
+            'pronuncia': get_pronuncia(soup), 'grammatica': get_grammatica(soup), 'locuzioni': get_locuzioni(soup),
             'url': url}
-    print(data)        
+    return data
+
+
+def get_en_data(word, all_data=True):
+    url = build_url(EN_URL.format(word))
+    soup = get_soup(url)
+    if all_data is False:
+        return get_en_defs(soup)
+
+    data = {'definition': get_en_defs(soup), 'sillables': get_sillabe(soup, word), 'lemma': get_lemma(soup),
+            'pronunciation': get_pronuncia(soup), 'part of speech': get_grammatica(soup),
+            'url': url}
     return data
