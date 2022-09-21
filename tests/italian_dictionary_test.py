@@ -24,14 +24,13 @@ class Test_ItalianDictionary():
         data = get_definition(word)
         assert type(data) is dict
         assert len(data) > 0
-    def test_one_syllable(self):
-        word = 'a'
+    def test_single_def_verb(self):
+        word = 'essere'
         data = get_definition(word)
         assert type(data) is dict
         assert len(data) > 0
-        assert len(data['sillabe']) == 1
-    def test_verb(self):
-        word = 'essere'
+    def test_multi_def_verb(self):
+        word = 'mangiare'
         data = get_definition(word)
         assert type(data) is dict
         assert len(data) > 0
