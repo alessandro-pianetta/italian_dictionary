@@ -4,7 +4,7 @@ from urllib import parse
 
 from italian_dictionary import exceptions
 
-URL = "https://www.dizionario-italiano.it/dizionario-italiano.php?parola={}100"
+URL = "https://www.dizionario-inglese.com/dizionario-italiano-inglese.php?parola={}"
 
 
 def build_url(base_url):
@@ -55,35 +55,29 @@ def get_grammatica(soup):
     return [x.text for x in gram]
 
 
-def get_locuzioni(soup):
-    bad_loc = soup.find_all('span', class_='cit_ita_1')
-    loc = [x.text for x in bad_loc]
-    return loc
-
-
 def get_defs(soup):
     defs = []
-    for definitions in soup.find_all('span', class_='italiano'):
-        children_content = ''
-        for children in definitions.findChildren():
-            if children.string is None:
-                continue
-            try:
-                if children.attrs['class'][0] in ('esempi', 'autore'):
-                    continue
-                else:
-                    children_content += children.text
-                    children_content += ' '
-                    children.decompose()
-            except KeyError:
-                continue
-        if children_content != '':
-            defs.append(f"{children_content.upper()} -- {definitions.text.replace('()', '')}")
+    definitions = soup.find_all('span', class_='italiano')
+    for definition in definitions:
+        sibling = definition.previous_sibling.previous_sibling;
+        sibling_type = sibling.name
+        sibling_number = sibling.text
+        if is_target_property(sibling_type, "b"):
+            if is_target_property(sibling_number,'1'):
+                defs.append([definition.text])
+            else:
+                defs[-1].append(definition.text)
         else:
-            defs.append(definitions.text)
+            defs.append(definition.text)
     if len(defs) == 0:
         raise exceptions.WordNotFoundError()
     return defs
+
+def is_target_property(type, target):
+    is_target = False
+    if type == target:
+        is_target = True
+    return is_target
 
 
 def get_data(word, all_data=True):
@@ -93,6 +87,7 @@ def get_data(word, all_data=True):
         return get_defs(soup)
 
     data = {'definizione': get_defs(soup), 'sillabe': get_sillabe(soup, word), 'lemma': get_lemma(soup),
-            'pronuncia': get_pronuncia(soup), 'grammatica': get_grammatica(soup), 'locuzioni': get_locuzioni(soup),
+            'pronuncia': get_pronuncia(soup), 'grammatica': get_grammatica(soup),
             'url': url}
+    print(data)        
     return data
