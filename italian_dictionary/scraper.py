@@ -94,19 +94,22 @@ def get_en_defs(soup):
         sibling = definition.previous_sibling.previous_sibling;
         sibling_type = sibling.name
         sibling_number = sibling.text
+        definition_text = clean_def_text(definition)
         if is_target_property(sibling_type, "b"):
             if is_target_property(sibling_number,'1'):
-                defs.append([definition.text])
+                defs.append([definition_text])
             else:
-                defs[-1].append(definition.text)
+                defs[-1].append(definition_text)
         else:
-            defs.append(definition.text)
+            defs.append(definition_text)
     if len(defs) == 0:
         raise exceptions.WordNotFoundError()
     if len(defs) == 1 and type(defs[0]) is list: # If dictionary entry has a single part of speech but multiple definitions, removes inner array
         return defs[0]
     return defs
 
+def clean_def_text(definition):
+    return definition.text.replace(';', '').rstrip()
 
 def is_target_property(type, target):
     is_target = False
