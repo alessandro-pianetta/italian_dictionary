@@ -103,6 +103,8 @@ def get_en_defs(soup):
             defs.append(definition.text)
     if len(defs) == 0:
         raise exceptions.WordNotFoundError()
+    if len(defs) == 1 and type(defs[0]) is list: # If dictionary entry has a single part of speech but multiple definitions, removes inner array
+        return defs[0]
     return defs
 
 
@@ -131,7 +133,7 @@ def get_en_data(word, all_data=True):
     if all_data is False:
         return get_en_defs(soup)
 
-    data = {'definition': get_en_defs(soup), 'sillables': get_sillabe(soup, word), 'lemma': get_lemma(soup),
+    data = {'definition': get_en_defs(soup), 'syllables': get_sillabe(soup, word), 'lemma': get_lemma(soup),
             'pronunciation': get_pronuncia(soup), 'part of speech': get_grammatica(soup),
             'url': url}
     return data
